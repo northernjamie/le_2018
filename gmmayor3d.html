@@ -1,0 +1,203 @@
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Propolis - 3D Energy Performance Certificate Explorer</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.34.0/mapbox-gl.js'></script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-96850678-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.34.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { 
+            margin:0; 
+            padding:0; 
+            font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif ; 
+        }
+
+        p {
+            font-size: 12px;
+        }
+        
+        #map { 
+            position:absolute; 
+            top:0; 
+            bottom:0; 
+            width:100%; 
+        }
+    
+        .mapboxgl-popup {
+            max-width: 400px;
+            font: 12px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            
+        }
+
+        .mapboxgl-popup-content {
+            background: rgba(255,255,255,0.7);
+        }
+
+        #features {
+            position: absolute;
+            margin: 5px;
+            padding: 5px;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 300px;
+            overflow: auto;
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+
+
+    </style>
+    
+</head>
+<body>
+
+<div id='map'></div>
+
+<div id="features">
+    <h2>GM Mayoral Election Results - 2017</h2>
+    <p>3D Map showing Ward-level data from the 2017 Mayoral election in Manchester, held 4 May.</p>
+    <p>Left-click drag to pan the map.</p>
+    <p>Right-click drag spins the map.</p>
+    <p>Pinch (or two-finger drag) to zoom.</p>
+    <p>Click an area to show breakdown of vote. (BEWARE - there's a degree of distortion because of the angle of the map, so clicking from a top-down view works, but clicking the top of a tower from a low angle will likely give a different ward's results. Try and click on the base of a tower for accurate resuts. The selected ward is hihglighted on the base map underneath to help with this). </p>
+    <p>Heights and colours have been calculated using the percentage difference between first and second place in each Ward, multiplied by 10. If you have a better way, tell me.</p>
+    <p>I used data provided by the Mayor's office to make this. You can find that data here (thanks Mayor!). But i did have to do some cleaning up of the file (putting ONS codes for geographies in, trimming spaces, correcting typos on the Ward names). You can get my cleaned-up version here.</p>
+    <p>Finally the code for this is on <a href="https://github.com/northernjamie/gm-mayor-3d" target ="_blank">my GitHub page</a>. Please feel free to make it better. I would ESPECIALLY like someone to fix the perspective issues when interacting with polygons.</p>
+    <p>@northernjamie</p>
+
+</div>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1Ijoibm9ydGhlcm5qYW1pZSIsImEiOiJjajEzZms2cDgwMDBqMndzOHJydmo3dHRxIn0.UCfu8lQvHP62WkKvPKVS5g';
+var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/mapbox/dark-v9', //stylesheet location
+    center: [-2.248, 53.48], // starting position
+    zoom: 9,
+    pitch: 45,
+    bearing: 0 
+});
+
+
+
+map.on('load', function() {
+
+map.addLayer({
+        'id': 'ward-fills',
+        'type': 'fill',
+        'source': {
+            'type': 'geojson',
+            'data': 'wards_gm_with_mayor_elec_2017_6simp2perc.geojson'
+        },
+        'paint': {
+            'fill-color': "#dddddd",
+            'fill-opacity': 0.1
+        }
+
+    });
+
+map.addLayer({
+        "id": "ward-fills-hover",
+        "type": "fill",
+        'source': {
+            'type': 'geojson',
+            'data': 'wards_gm_with_mayor_elec_2017_6simp2perc.geojson'
+        },
+        "layout": {},
+        "paint": {
+            "fill-color": "#dddddd",
+            "fill-opacity": 1
+        },
+        "filter": ["==", "CODE", ""]
+    });
+
+    map.addLayer({
+        'id': 'wards_mayor',
+        'type': 'fill-extrusion',
+        'source': {
+            'type': 'geojson',
+            'data': 'wards_gm_with_mayor_elec_2017_6simp2perc.geojson'
+        },
+        'paint': {
+            // See the Mapbox Style Spec for details on property functions
+            // https://www.mapbox.com/mapbox-gl-style-spec/#types-function
+            'fill-extrusion-color': {
+                'property': 'ELECCOLOUR',
+                'type': 'identity'
+                },
+            'fill-extrusion-height': {
+                
+                'property': 'ELECPERC_DIFFERENCE_ORDER_100',
+                'type': 'identity'
+            },
+            'fill-extrusion-base': {
+                'property': '0',
+                'type': 'identity'
+            },
+            'fill-extrusion-opacity': 0.7
+            
+
+        }
+
+
+    });
+    /*
+    map.on("mousemove", "ward-fills", function(e) {
+        map.setFilter("ward-fills-hover", ["==", "CODE", e.features[0].properties.CODE]);
+    });
+
+    // Reset the state-fills-hover layer's filter when the mouse leaves the layer.
+    map.on("mouseleave", "ward-fills", function() {
+        map.setFilter("ward-fills-hover", ["==", "CODE", ""]);
+    });
+    */
+    
+    /*
+    map.on("mousemove",function(e) {
+        var features = map.queryRenderedFeatures(e.point, { layers: ['ward-fills'] })
+        map.setFilter("ward-fills-hover", ["==", "CODE", e.features[0].properties.CODE]);
+    });
+
+    // Reset the state-fills-hover layer's filter when the mouse leaves the layer.
+    map.on("mouseleave",function() {
+        map.setFilter("ward-fills-hover", ["==", "CODE", ""]);
+    });
+    */
+
+    
+
+    map.on('click', function(e) {
+        var features = map.queryRenderedFeatures(e.point, { layers: ['wards_mayor'] })
+        new mapboxgl.Popup()
+           .setLngLat(e.lngLat)
+            .setHTML("<h2>" + features[0].properties.NAME + "</h2><table><tr><td>Sean Anstee (CON): </td><td><strong>" + features[0].properties.ELECANSTEE_COUNT + " Votes</strong></td></tr><tr><td>Mohammed Aslam (IND): </td><td><strong>" + features[0].properties.ELECASLAM_COUNT + " Votes</strong></td></tr><tr><td>Jane Brophy (LD): </td><td><strong>" + features[0].properties.ELECBROPHY_COUNT + " Votes</strong></td></tr><tr><td>Andy Burnham (LAB): </td><td><strong>" + features[0].properties.ELECBURNHAM_COUNT + " Votes</strong></td></tr><tr><td>Marcus Farmer (IND): </td><td><strong>" + features[0].properties.ELECFARMER_COUNT + " Votes</strong></td></tr><tr><td>Stephen Morris (ENG DEM): </td><td><strong>" + features[0].properties.ELECMORRIS_COUNT + " Votes</strong></td></tr><tr><td>Shneur Odze (UKIP): </td><td><strong>" + features[0].properties.ELECODZE_COUNT + " Votes</strong></td></tr><tr><td>Will Patterson (GRN): </td><td><strong>" + features[0].properties.ELECPATTERSON_COUNT + " Votes</strong></td></tr></table>" )
+            .addTo(map);
+        map.setFilter("ward-fills-hover", ["==", "CODE",features[0].properties.CODE]);
+        console.log(features[0].properties.CODE);
+    });
+    
+    /*
+    map.on('click', function (e) {
+        console.log(e.latLng);
+        new mapboxgl.Popup()
+            .setLngLat([-2.3,53.5])
+            .setHTML(e.features[0].properties.NAME)
+            .addTo(map);
+    });
+    */
+});
+
+</script>
+
+</body>
+</html>
