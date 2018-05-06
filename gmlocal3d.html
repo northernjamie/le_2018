@@ -1,7 +1,7 @@
 <html>
 <head>
     <meta charset='utf-8' />
-    <title>Propolis - 3D Energy Performance Certificate Explorer</title>
+    <title>Propolis - The Greater Manchester Mayoral Election in 3D</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.34.0/mapbox-gl.js'></script>
     <script>
@@ -113,15 +113,15 @@
 
 <div id="features">
     <button class="close" onclick="document.getElementById('features').style.display='none'" >Close</button>
-    <h2>GM Mayoral Election Results - 2017</h2>
-    <p>2D/3D Map showing Ward-level data from the 2017 Mayoral election in Manchester, held 4 May.</p>
+    <h2>GM Local Election Results 2018</h2>
+    <p>2D/3D Map showing Ward-level data from the 2018 local election in Trafford, held 3 May. Rest of GM to follow once I've got the data.</p>
     <p>Left-click-drag pans the map.</p>
     <p>Right-click-drag spins the map (and changes pitch on non-touch devices)</p>
     <p>Pinch (or two-finger drag) to zoom.</p>
     <p>Click an area to show breakdown of vote. (BEWARE - there's a degree of distortion on the 3D map because of the view angle, so clicking from a top-down view works, but clicking the top of a tower from a low angle will likely give a different ward's results. Try and click on the base of a tower for accurate resuts. The selected ward is highlighted on the base map underneath to help with this). </p>
-    <p>Heights and colours have been calculated using the percentage difference between first and second place in each Ward, multiplied by 100. If you have a better way, tell me!</p>
-    <p>I used data provided by the Mayor's office to make this. You can <a href="https://www.gmelects.org.uk/downloads/download/12/gm_mayor_election_4_may_2017_ward_level_data" target="_blank">find that data here</a> (thanks Mayor!). But I did have to do some cleaning up of the file (putting ONS codes for geographies in, trimming spaces, correcting typos on the Ward names). <a href="https://github.com/northernjamie/gm-mayor-3d/blob/master/Cleaned_GMCA_Mayor_Ward_Level_Data.csv" target="_blank">You can get my cleaned-up version here</a>.</p>
-    <p>Finally the code for this is on <a href="https://github.com/northernjamie/gm-mayor-3d" target ="_blank">my GitHub page</a>. Please feel free to make it better. I would ESPECIALLY like someone to fix the perspective issues when interacting with polygons.</p>
+    <p>In the 3D view, heights of polygons are calculated as the percentage share of the total votes in each ward. Colours are set according to the party that took the seat.</p>
+    <p>Thanks to Trafford Data Lab for the data. You can get it yourself on <a href="" target = "_blank">their open data site</a>.</p>
+    <p>Finally the code for this is on <a href="https://github.com/northernjamie/le_2018" target ="_blank">my GitHub page</a>. Please feel free to make it better. I would ESPECIALLY like someone to fix the perspective issues when interacting with polygons.</p>
     <p><a href="http://twitter.com/northernjamie" target="_blank">@northernjamie</a></p>
     <button class="close" onclick="document.getElementById('features').style.display='none'" >Close</button>
 
@@ -133,8 +133,8 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoibm9ydGhlcm5qYW1pZSIsImEiOiJjajEzZms2cDgwMDBqM
 var map = new mapboxgl.Map({
     container: 'map', // container id
     style: 'mapbox://styles/mapbox/dark-v9', //stylesheet location
-    center: [-2.248, 53.48], // starting position
-    zoom: 9,
+    center: [-2.248, 53.42], // starting position
+    zoom: 10,
     pitch: 0,
     bearing: 0 
 });
@@ -148,14 +148,14 @@ map.addLayer({
         'type': 'fill',
         'source': {
             'type': 'geojson',
-            'data': 'wards_gm_with_mayor_elec_2017_6simp2perc.geojson'
+            'data': 'trafford_le2018.geojson'
         },
         'layout': {
-            'visibility': 'none'
+            'visibility': 'visible'
         },
         'paint': {
             'fill-color': {
-            'property': 'ELECCOLOUR',
+            'property': 'trafford_2018LE_for_map_winning_colour',
             'type':'identity'
             },
             'fill-opacity': 0.7
@@ -168,7 +168,7 @@ map.addLayer({
         'type': 'line',
         'source': {
             'type': 'geojson',
-            'data': 'wards_gm_with_mayor_elec_2017_6simp2perc.geojson'
+            'data': 'trafford_le2018.geojson'
         },
         'layout': {
             'visibility': 'visible'
@@ -184,7 +184,7 @@ map.addLayer({
         "type": "line",
         'source': {
             'type': 'geojson',
-            'data': 'wards_gm_with_mayor_elec_2017_6simp2perc.geojson'
+            'data': 'trafford_le2018.geojson'
         },
         'layout': {
             'visibility': 'visible'
@@ -202,21 +202,21 @@ map.addLayer({
         'type': 'fill-extrusion',
         'source': {
             'type': 'geojson',
-            'data': 'wards_gm_with_mayor_elec_2017_6simp2perc.geojson'
+            'data': 'trafford_le2018.geojson'
         },
         'layout': {
-            'visibility': 'visible'
+            'visibility': 'none'
         },
         'paint': {
             // See the Mapbox Style Spec for details on property functions
             // https://www.mapbox.com/mapbox-gl-style-spec/#types-function
             'fill-extrusion-color': {
-                'property': 'ELECCOLOUR',
+                'property': 'trafford_2018LE_for_map_winning_colour',
                 'type': 'identity'
                 },
             'fill-extrusion-height': {
                 
-                'property': 'ELECPERC_DIFFERENCE_ORDER_100',
+                'property': 'trafford_2018LE_for_map_percvotesharex50',
                 'type': 'identity'
             },
             'fill-extrusion-base': {
@@ -269,9 +269,9 @@ for (var i = 0; i < toggleableLayerIds.length; i++) {
         var features = map.queryRenderedFeatures(e.point, { layers: ['3D','2D'] })
         new mapboxgl.Popup()
            .setLngLat(e.lngLat)
-            .setHTML("<h2>" + features[0].properties.NAME + "</h2><table><tr><td>Sean Anstee (CON): </td><td><strong>" + features[0].properties.ELECANSTEE_COUNT + " Votes</strong></td></tr><tr><td>Mohammed Aslam (IND): </td><td><strong>" + features[0].properties.ELECASLAM_COUNT + " Votes</strong></td></tr><tr><td>Jane Brophy (LD): </td><td><strong>" + features[0].properties.ELECBROPHY_COUNT + " Votes</strong></td></tr><tr><td>Andy Burnham (LAB): </td><td><strong>" + features[0].properties.ELECBURNHAM_COUNT + " Votes</strong></td></tr><tr><td>Marcus Farmer (IND): </td><td><strong>" + features[0].properties.ELECFARMER_COUNT + " Votes</strong></td></tr><tr><td>Stephen Morris (ENG DEM): </td><td><strong>" + features[0].properties.ELECMORRIS_COUNT + " Votes</strong></td></tr><tr><td>Shneur Odze (UKIP): </td><td><strong>" + features[0].properties.ELECODZE_COUNT + " Votes</strong></td></tr><tr><td>Will Patterson (GRN): </td><td><strong>" + features[0].properties.ELECPATTERSON_COUNT + " Votes</strong></td></tr></table>" )
+            .setHTML("<h2>" + features[0].properties.name_2 + "</h2><h4>" + features[0].properties.trafford_2018LE_for_map_candidate + "</h4><h4>" + features[0].properties.trafford_2018LE_for_map_party + " Party </h4><h4>" + parseInt(features[0].properties.trafford_2018LE_for_map_percvoteshare) + "% of the vote</h4")
             .addTo(map);
-        map.setFilter("ward-fills-hover", ["==", "CODE",features[0].properties.CODE]);
+        map.setFilter("ward-fills-hover", ["==", "code_2",features[0].properties.code_2]);
         console.log(features[0].properties.CODE);
     });
     
